@@ -84,7 +84,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
         
         DispatchQueue.main.async {
-//            let imageName = referenceImage.name ?? ""
+            let imageName = referenceImage.name ?? ""
+            
+            print("Detected image “\(imageName)”")
 //            self.statusViewController.cancelAllScheduledMessages()
 //            self.statusViewController.showMessage("Detected image “\(imageName)”")
         }
