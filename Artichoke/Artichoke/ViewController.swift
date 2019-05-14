@@ -67,6 +67,23 @@ extension ViewController: ARSCNViewDelegate {
         
         updateQueue.async {
             self.highlight(detectedImage: referenceImage, with: node)
+            
+            let planeGeometry = SCNPlane(
+                width: 0.05, //referenceImage.physicalSize.width,
+                height: 0.05 //referenceImage.physicalSize.height
+            )
+            
+            let material = SCNMaterial()
+            
+            material.diffuse.contents = UIImage(named: "btn-img-normal") //UIColor.red
+            
+            let planeNode = SCNNode(geometry: planeGeometry)
+            
+            planeNode.geometry?.firstMaterial = material
+            planeNode.opacity = 0.25
+            planeNode.eulerAngles.x = -.pi / 2
+                        
+            node.addChildNode(planeNode)
         }
         
         DispatchQueue.main.async {
