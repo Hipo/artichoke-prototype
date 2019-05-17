@@ -12,22 +12,27 @@ import ARKit
 
 class ViewController: UIViewController {
 
+    // MARK: - Properties
+    
     @IBOutlet var sceneView: ARSCNView!
     
     /// A serial queue for thread safety when modifying the SceneKit node graph.
     private let updateQueue = DispatchQueue(label: Bundle.main.bundleIdentifier! +
         ".serialSceneKitQueue")
     
-    /// Convenience accessor for the session owned by ARSCNView.
     private var session: ARSession {
         return sceneView.session
     }
     
+    private var lastDetectedImage: ARReferenceImage?
+    
+    // MARK: - View lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Set the view's delegate
         sceneView.delegate = self
+        setupTapGestureRecognizer()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -65,51 +70,16 @@ extension ViewController: ARSCNViewDelegate {
         guard let imageAnchor = anchor as? ARImageAnchor else { return }
         let referenceImage = imageAnchor.referenceImage
         
+        lastDetectedImage = referenceImage
+        
         updateQueue.async {
-            self.highlight(detectedImage: referenceImage, with: node)
-            
-            let planeGeometry = SCNPlane(
-                width: 0.05, //referenceImage.physicalSize.width,
-                height: 0.05 //referenceImage.physicalSize.height
-            )
-            
-            let material = SCNMaterial()
-            
-            material.diffuse.contents = UIImage(named: "btn-img-normal") //UIColor.red
-            
-            let planeNode = SCNNode(geometry: planeGeometry)
-            
-            planeNode.geometry?.firstMaterial = material
-            planeNode.opacity = 0.25
-            planeNode.eulerAngles.x = -.pi / 2
-                        
-            node.addChildNode(planeNode)
+//            self.highlight(referenceImage, for: node)
+            self.displayButton(on: referenceImage, addingTo: node)
         }
-        
-        DispatchQueue.main.async {
-            let imageName = referenceImage.name ?? ""
-            
-            print("Detected image “\(imageName)”")
-//            self.statusViewController.cancelAllScheduledMessages()
-//            self.statusViewController.showMessage("Detected image “\(imageName)”")
-        }
-    }
-    
-    func session(_ session: ARSession, didFailWithError error: Error) {
-        // Present an error message to the user
-        
-    }
-    
-    func sessionWasInterrupted(_ session: ARSession) {
-        // Inform the user that the session has been interrupted, for example, by presenting an overlay
-        
-    }
-    
-    func sessionInterruptionEnded(_ session: ARSession) {
-        // Reset tracking and/or remove existing anchors if consistent tracking is required
-        
     }
 }
+
+// MARK: - Node Additions
 
 extension ViewController {
     private var imageHighlightAction: SCNAction {
@@ -125,11 +95,11 @@ extension ViewController {
         return .sequence(actions)
     }
     
-    fileprivate func highlight(detectedImage: ARReferenceImage, with node: SCNNode) {
+    fileprivate func highlight(_ image: ARReferenceImage, for node: SCNNode) {
         
         // Create a plane to visualize the initial position of the detected image.
-        let plane = SCNPlane(width: detectedImage.physicalSize.width,
-                             height: detectedImage.physicalSize.height)
+        let plane = SCNPlane(width: image.physicalSize.width,
+                             height: image.physicalSize.height)
         
         let planeNode = SCNNode(geometry: plane)
         
@@ -150,5 +120,58 @@ extension ViewController {
         
         // Add the plane visualization to the scene.
         node.addChildNode(planeNode)
+    }
+    
+    fileprivate func displayButton(on image: ARReferenceImage, addingTo node: SCNNode) {
+        let planeGeometry = SCNPlane(
+            width: 0.04, //referenceImage.physicalSize.width * ratio,
+            height: 0.04 //referenceImage.physicalSize.height * ratio
+        )
+        
+        let material = SCNMaterial()
+        
+        material.diffuse.contents = UIImage(named: "btn-img-normal")
+        
+        let planeNode = SCNNode(geometry: planeGeometry)
+        
+        planeNode.name = image.name
+        planeNode.geometry?.firstMaterial = material
+        planeNode.eulerAngles.x = -.pi / 2
+        
+        node.addChildNode(planeNode)
+    }
+}
+
+// MARK: - Gestures
+
+extension ViewController {
+    fileprivate func setupTapGestureRecognizer() {
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(didTriggerTapRecognizer(_ :)))
+        
+        sceneView.addGestureRecognizer(tapRecognizer)
+    }
+    
+    @objc
+    private func didTriggerTapRecognizer(_ recognizer: UITapGestureRecognizer) {
+        guard
+            let detectedImageName = lastDetectedImage?.name,
+            sceneView == recognizer.view
+            else {
+                return
+        }
+        
+        let location = recognizer.location(in: sceneView)
+        let results = sceneView.hitTest(
+            location,
+            options: [
+                SCNHitTestOption.searchMode: SCNHitTestSearchMode.all.rawValue
+            ]
+        )
+        
+        for aResult in results.filter( { $0.node.name != nil } ) {
+            if aResult.node.name == detectedImageName {
+                print("TAPPED BUTTON ON: \(detectedImageName)")
+            }
+        }
     }
 }
