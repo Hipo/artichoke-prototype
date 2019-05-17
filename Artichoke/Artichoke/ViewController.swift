@@ -11,10 +11,22 @@ import SceneKit
 import ARKit
 
 class ViewController: UIViewController {
+    
+    // MARK: - Constants
+    
+    private let defaultLayoutInset: CGFloat = 10.0
+    private let textViewHeight: CGFloat = 50.0
 
     // MARK: - Properties
     
     @IBOutlet var sceneView: ARSCNView!
+    private lazy var textView: UITextView = {
+        let view = UITextView()
+        
+        view.isScrollEnabled = false
+        
+        return view
+    }()
     
     /// A serial queue for thread safety when modifying the SceneKit node graph.
     private let updateQueue = DispatchQueue(label: Bundle.main.bundleIdentifier! +
@@ -33,6 +45,7 @@ class ViewController: UIViewController {
         
         sceneView.delegate = self
         setupTapGestureRecognizer()
+        setupTextViewLayout()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -45,6 +58,31 @@ class ViewController: UIViewController {
         super.viewWillDisappear(animated)
         
         pauseSession()
+    }
+    
+    // MARK: - Layout setup
+    
+    private func setupTextViewLayout() {
+        view.addSubview(textView)
+        
+        textView.translatesAutoresizingMaskIntoConstraints = false        
+        textView.heightAnchor.constraint(equalToConstant: textViewHeight).isActive = true
+        textView.leftAnchor
+            .constraint(
+                equalTo: view.leftAnchor,
+                constant: defaultLayoutInset
+            ).isActive = true
+        
+        textView.rightAnchor
+            .constraint(
+                equalTo: view.rightAnchor,
+                constant: -defaultLayoutInset
+            ).isActive = true
+
+        textView.safeAreaLayoutGuide.bottomAnchor.constraint(
+            equalTo: view.safeAreaLayoutGuide.bottomAnchor,
+            constant: -defaultLayoutInset
+            ).isActive = true
     }
     
     // MARK: - Session
@@ -178,6 +216,7 @@ extension ViewController {
         for aResult in results.filter( { $0.node.name != nil } ) {
             if aResult.node.name == detectedImageName {
                 print("TAPPED BUTTON ON: \(detectedImageName)")
+                textView.text = detectedImageName
             }
         }
     }
