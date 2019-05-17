@@ -123,24 +123,26 @@ extension ViewController {
     }
     
     fileprivate func displayButton(on image: ARReferenceImage, addingTo node: SCNNode) {
-        let planeGeometry = SCNPlane(
-            width: 0.04, //referenceImage.physicalSize.width * ratio,
-            height: 0.04 //referenceImage.physicalSize.height * ratio
+        let buttonSize = CGSize(width: 0.04, height: 0.04)
+        
+        let buttonGeometry = SCNPlane(
+            width: buttonSize.width,  // referenceImage.physicalSize.width * ratio,
+            height: buttonSize.height // referenceImage.physicalSize.height * ratio
         )
         
         let material = SCNMaterial()
         
         material.diffuse.contents = UIImage(named: "btn-img")
         
-        let planeNode = SCNNode(geometry: planeGeometry)
+        let planeNode = SCNNode(geometry: buttonGeometry)
         
         planeNode.name = image.name
         planeNode.geometry?.firstMaterial = material
         planeNode.eulerAngles.x = -.pi / 2
         planeNode.worldPosition = SCNVector3(
-            image.physicalSize.width / 2,  // x
-            0,                             // y
-            -image.physicalSize.height / 2 // z
+            image.physicalSize.width / 2 - buttonSize.width / 2,   // x
+            0,                                                     // y
+            -image.physicalSize.height / 2 + buttonSize.height / 2 // z
         )
         
         node.addChildNode(planeNode)
