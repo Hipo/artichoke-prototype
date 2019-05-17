@@ -137,6 +137,11 @@ extension ViewController {
         planeNode.name = image.name
         planeNode.geometry?.firstMaterial = material
         planeNode.eulerAngles.x = -.pi / 2
+        planeNode.worldPosition = SCNVector3(
+            image.physicalSize.width / 2, // x
+            0,                            // y
+            -image.physicalSize.height / 2 // z
+        )
         
         node.addChildNode(planeNode)
     }
