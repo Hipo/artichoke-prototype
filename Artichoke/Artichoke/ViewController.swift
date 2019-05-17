@@ -130,7 +130,7 @@ extension ViewController {
         
         let material = SCNMaterial()
         
-        material.diffuse.contents = UIImage(named: "btn-img-normal")
+        material.diffuse.contents = UIImage(named: "btn-img")
         
         let planeNode = SCNNode(geometry: planeGeometry)
         
@@ -138,8 +138,8 @@ extension ViewController {
         planeNode.geometry?.firstMaterial = material
         planeNode.eulerAngles.x = -.pi / 2
         planeNode.worldPosition = SCNVector3(
-            image.physicalSize.width / 2, // x
-            0,                            // y
+            image.physicalSize.width / 2,  // x
+            0,                             // y
             -image.physicalSize.height / 2 // z
         )
         
