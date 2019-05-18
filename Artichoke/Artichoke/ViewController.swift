@@ -10,6 +10,12 @@ import UIKit
 import SceneKit
 import ARKit
 
+
+enum Artwork: String {
+    case berman, burke, icarus, nightwatch, starrynight
+}
+
+
 class ViewController: UIViewController {
     
     // MARK: - Constants
@@ -35,8 +41,6 @@ class ViewController: UIViewController {
     private var session: ARSession {
         return sceneView.session
     }
-    
-    private var lastDetectedImage: ARReferenceImage?
     
     // MARK: - View lifecycle
     
@@ -108,8 +112,6 @@ extension ViewController: ARSCNViewDelegate {
         guard let imageAnchor = anchor as? ARImageAnchor else { return }
         let referenceImage = imageAnchor.referenceImage
         
-        lastDetectedImage = referenceImage
-        
         updateQueue.async {
 //            self.highlight(referenceImage, for: node)
             self.displayButton(on: referenceImage, addingTo: node)
@@ -161,7 +163,7 @@ extension ViewController {
     }
     
     fileprivate func displayButton(on image: ARReferenceImage, addingTo node: SCNNode) {
-        let buttonSize = CGSize(width: 0.04, height: 0.04)
+        let buttonSize = CGSize(width: 0.06, height: 0.06)
         
         let buttonGeometry = SCNPlane(
             width: buttonSize.width,  // referenceImage.physicalSize.width * ratio,
@@ -170,20 +172,20 @@ extension ViewController {
         
         let material = SCNMaterial()
         
-        material.diffuse.contents = UIImage(named: "btn-img")
+        material.diffuse.contents = UIImage(named: "artichoke-button")
         
-        let planeNode = SCNNode(geometry: buttonGeometry)
+        let buttonNode = SCNNode(geometry: buttonGeometry)
         
-        planeNode.name = image.name
-        planeNode.geometry?.firstMaterial = material
-        planeNode.eulerAngles.x = -.pi / 2
-        planeNode.worldPosition = SCNVector3(
-            image.physicalSize.width / 2 - buttonSize.width / 2,   // x
-            0,                                                     // y
-            -image.physicalSize.height / 2 + buttonSize.height / 2 // z
+        buttonNode.name = image.name
+        buttonNode.geometry?.firstMaterial = material
+        buttonNode.eulerAngles.x = -.pi / 2
+        buttonNode.worldPosition = SCNVector3(
+            (image.physicalSize.width / 2) - (buttonSize.width / 2),    // x
+            0,                                                         // y
+            (-image.physicalSize.height / 2) + (buttonSize.height / 2)  // z
         )
         
-        node.addChildNode(planeNode)
+        node.addChildNode(buttonNode)
     }
 }
 
@@ -198,11 +200,8 @@ extension ViewController {
     
     @objc
     private func didTriggerTapRecognizer(_ recognizer: UITapGestureRecognizer) {
-        guard
-            let detectedImageName = lastDetectedImage?.name,
-            sceneView == recognizer.view
-            else {
-                return
+        if sceneView != recognizer.view {
+            return
         }
         
         let location = recognizer.location(in: sceneView)
@@ -214,10 +213,26 @@ extension ViewController {
         )
         
         for aResult in results.filter( { $0.node.name != nil } ) {
-            if aResult.node.name == detectedImageName {
-                print("TAPPED BUTTON ON: \(detectedImageName)")
-                textView.text = detectedImageName
+            guard let detectedImageName = aResult.node.name else {
+                continue
             }
+            
+            switch detectedImageName {
+                case Artwork.berman.rawValue:
+                    textView.text = "Rachel Berman"
+                case Artwork.burke.rawValue:
+                    textView.text = "Brian Burke"
+                case Artwork.icarus.rawValue:
+                    textView.text = "Icarus"
+                case Artwork.nightwatch.rawValue:
+                    textView.text = "Night Watch"
+                case Artwork.starrynight.rawValue:
+                    textView.text = "Van Gogh"
+                default:
+                    textView.text = ""
+            }
+                
+            print("TAPPED BUTTON ON: \(detectedImageName)")
         }
     }
 }
